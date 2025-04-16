@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Circular background -->
+  <circle cx="50" cy="50" r="50" fill="white" />
+  
+  <style>
+    .primary { fill: #6366F1; }
+    .outline { fill: none; stroke: #6366F1; stroke-width: 2; }
+    .accent { fill: #A5B4FC; }
+    .black { fill: #000000; }
+  </style>
+  
+  <!-- Scale and center the Fashion Bot significantly larger -->
+  <g transform="translate(-25, -30) scale(1.5)">
+    <!-- Robot Head -->
+    <rect x="35" y="20" width="30" height="25" rx="5" class="outline" />
+    
+    <!-- Sunglasses -->
+    <path d="M35,30 L65,30" stroke="#000" stroke-width="2" />
+    <rect x="38" y="26" width="10" height="8" rx="2" class="black" />
+    <rect x="52" y="26" width="10" height="8" rx="2" class="black" />
+    
+    <!-- Smile -->
+    <path d="M43,38 C46,42 54,42 57,38" class="outline" />
+    
+    <!-- Fashion Scarf -->
+    <path d="M45,45 L30,50 L35,55 L45,52" class="primary" />
+    <path d="M55,45 L70,50 L65,55 L55,52" class="primary" />
+    <rect x="45" y="45" width="10" height="7" rx="2" class="primary" />
+    
+    <!-- Body/Outfit -->
+    <path d="M40,52 L60,52 L65,80 L35,80 Z" class="outline" />
+    <path d="M40,65 L60,65" class="outline" stroke-dasharray="2,2" />
+    
+    <!-- Tech Elements -->
+    <circle cx="45" cy="58" r="2" class="accent" />
+    <circle cx="55" cy="58" r="2" class="accent" />
+    <circle cx="45" cy="72" r="2" class="accent" />
+    <circle cx="55" cy="72" r="2" class="accent" />
+    <path d="M45,58 L55,58 M45,72 L55,72" class="outline" stroke-dasharray="1,1" />
+  </g>
+</svg>

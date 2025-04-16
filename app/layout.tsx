@@ -15,6 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Dressed by AI",
   description: "Try on clothes virtually using AI image generation",
+  icons: {
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+  }
 };
 
 export default function RootLayout({
