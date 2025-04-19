@@ -6,6 +6,7 @@ export async function POST(request: Request) {
         const personImage = formData.get('personImage') as File;
         const clothingImage = formData.get('clothingImage') as File;
         const apiKey = formData.get('apiKey') as string;
+        const category = formData.get('category') as 'upper_body' | 'lower_body' | 'dresses' || 'upper_body';
 
         if (!personImage || !clothingImage) {
             return NextResponse.json(
@@ -30,8 +31,8 @@ export async function POST(request: Request) {
             crop: false, // Set to true if image isn't 3:4 ratio
             seed: 42,
             steps: 30,
-            category: "upper_body",
-            force_dc: false,
+            category: category,
+            force_dc: category === 'dresses', // Set force_dc to true when category is dresses as per API docs
             human_img: personBase64,  // No data:image prefix
             garm_img: clothingBase64, // No data:image prefix
             mask_only: false

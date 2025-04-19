@@ -37,15 +37,6 @@ cd dressed-by-ai
 pnpm install
 ```
 
-3. Set up environment variables:
-   
-Create a `.env.local` file in the root directory with the following content:
-```
-OPENAI_API_KEY=your_openai_api_key_here
-```
-
-Replace `your_openai_api_key_here` with your actual OpenAI API key.
-
 ### Development
 
 Run the development server with Turbopack:
@@ -77,6 +68,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- Built with OpenAI's GPT-4o Vision model
+- Built with idm-vton model
 - Styled with Tailwind CSS
 - Powered by Next.js
