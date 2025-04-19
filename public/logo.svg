@@ -10,7 +10,7 @@
   </style>
   
   <!-- Scale and center the Fashion Bot significantly larger -->
-  <g transform="translate(-25, -30) scale(1.5)">
+  <g transform="translate(-25, -26) scale(1.5)">
     <!-- Robot Head -->
     <rect x="35" y="20" width="30" height="25" rx="5" class="outline" />
     

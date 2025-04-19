@@ -1,15 +1,11 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
 
 export async function POST(request: Request) {
     try {
         const formData = await request.formData();
         const personImage = formData.get('personImage') as File;
         const clothingImage = formData.get('clothingImage') as File;
+        const apiKey = formData.get('apiKey') as string;
 
         if (!personImage || !clothingImage) {
             return NextResponse.json(
@@ -18,59 +14,93 @@ export async function POST(request: Request) {
             );
         }
 
+        if (!apiKey) {
+            return NextResponse.json(
+                { error: 'Segmind API key is required' },
+                { status: 400 }
+            );
+        }
+
         // Convert images to base64
         const personBase64 = Buffer.from(await personImage.arrayBuffer()).toString('base64');
         const clothingBase64 = Buffer.from(await clothingImage.arrayBuffer()).toString('base64');
 
-        // Create vision API call with GPT-4o
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-                {
-                    role: "system",
-                    content: "You are an expert in fashion and photo editing. You'll receive two images - a person and a clothing item. Generate a realistic image of the person wearing that clothing item."
+        // Create data for Segmind API
+        const data = {
+            crop: false, // Set to true if image isn't 3:4 ratio
+            seed: 42,
+            steps: 30,
+            category: "upper_body",
+            force_dc: false,
+            human_img: personBase64,  // No data:image prefix
+            garm_img: clothingBase64, // No data:image prefix
+            mask_only: false
+        };
+
+        const url = "https://api.segmind.com/v1/idm-vton";
+
+        // Call Segmind API using native fetch
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'x-api-key': apiKey,
+                    'Content-Type': 'application/json'
                 },
-                {
-                    role: "user",
-                    content: [
-                        {
-                            type: "text",
-                            text: "Generate a realistic image of the person wearing the clothing item. Make the result look natural and photorealistic."
-                        },
-                        {
-                            type: "image_url",
-                            image_url: {
-                                url: `data:image/jpeg;base64,${personBase64}`,
-                                detail: "high"
-                            }
-                        },
-                        {
-                            type: "image_url",
-                            image_url: {
-                                url: `data:image/jpeg;base64,${clothingBase64}`,
-                                detail: "high"
-                            }
-                        }
-                    ]
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                const status = response.status;
+
+                if (status === 401) {
+                    return NextResponse.json(
+                        { error: 'Invalid Segmind API key. Please check your API key and try again.' },
+                        { status: 401 }
+                    );
+                } else if (status === 429) {
+                    return NextResponse.json(
+                        { error: 'Segmind API rate limit exceeded. Please try again later.' },
+                        { status: 429 }
+                    );
                 }
-            ],
-            max_tokens: 1000,
-            temperature: 0.7,
-            response_format: { type: "text" }
-        });
 
-        // Extract the image URL from the response
-        const generatedImageUrl = response.choices[0].message.content;
+                // Try to parse error message
+                let errorMessage = 'Segmind API error';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (parseError) {
+                    console.error('Error parsing API error response:', parseError);
+                }
 
-        // Return the generated image URL
-        return NextResponse.json({
-            imageUrl: generatedImageUrl
-        });
+                return NextResponse.json(
+                    { error: errorMessage },
+                    { status }
+                );
+            }
 
-    } catch (error) {
+            // Get response as arrayBuffer and convert to base64
+            const imageBuffer = await response.arrayBuffer();
+            const resultImageBase64 = `data:image/jpeg;base64,${Buffer.from(imageBuffer).toString('base64')}`;
+
+            // Return the generated image as base64
+            return NextResponse.json({
+                imageUrl: resultImageBase64
+            });
+        } catch (apiError: any) {
+            console.error('Segmind API error:', apiError);
+
+            // Generic error handling
+            return NextResponse.json(
+                { error: apiError.message || 'Segmind API error' },
+                { status: 500 }
+            );
+        }
+    } catch (error: any) {
         console.error('Error generating image:', error);
         return NextResponse.json(
-            { error: 'Failed to generate image' },
+            { error: error.message || 'Failed to generate image' },
             { status: 500 }
         );
     }
