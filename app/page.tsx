@@ -77,16 +77,24 @@ export default function Home() {
     setUseDefaultClothing(true);
   };
 
-  const handleUploadPerson = (file: File) => {
-    setPersonImage(file);
-    setSelectedDefaultPerson(null);
-    setUseDefaultPerson(false);
+  const handleUploadPerson = (file: File | null) => {
+    if (file) {
+      setPersonImage(file);
+      setSelectedDefaultPerson(null);
+      setUseDefaultPerson(false);
+    } else {
+      setPersonImage(null);
+    }
   };
 
-  const handleUploadClothing = (file: File) => {
-    setClothingImage(file);
-    setSelectedDefaultClothing(null);
-    setUseDefaultClothing(false);
+  const handleUploadClothing = (file: File | null) => {
+    if (file) {
+      setClothingImage(file);
+      setSelectedDefaultClothing(null);
+      setUseDefaultClothing(false);
+    } else {
+      setClothingImage(null);
+    }
   };
 
   const fetchImageAsFile = async (url: string, fileName: string): Promise<File> => {

@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import Image from 'next/image';
 
 interface ImageUploaderProps {
-    onImageSelected: (file: File) => void;
+    onImageSelected: (file: File | null) => void;
     label: string;
     imagePreview: string | null;
 }
@@ -44,6 +44,13 @@ export default function ImageUploader({ onImageSelected, label, imagePreview }: 
         fileInputRef.current?.click();
     };
 
+    const handleRemoveImage = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+        onImageSelected(null);
+    };
+
     return (
         <div className="w-full">
             {imagePreview ? (
@@ -56,7 +63,7 @@ export default function ImageUploader({ onImageSelected, label, imagePreview }: 
                     />
                     <button
                         className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full w-8 h-8 flex items-center justify-center"
-                        onClick={() => onImageSelected(null as unknown as File)}
+                        onClick={handleRemoveImage}
                         aria-label="Remove image"
                     >
                         ✕
