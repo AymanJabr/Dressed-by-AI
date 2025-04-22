@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import ImageUploader from './components/ImageUploader';
-import LoadingSpinner from './components/LoadingSpinner';
+import LoadingDots from './components/LoadingDots';
 import ApiKeyConfig from './components/ApiKeyConfig';
 import { ApiKeyConfig as ApiKeyConfigType } from './types';
 
@@ -492,7 +492,7 @@ export default function Home() {
                   <div className="flex-grow flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
                     {isLoading ? (
                       <div className="mt-8 flex flex-col items-center">
-                        <LoadingSpinner />
+                        <LoadingDots />
                         <p className="mt-3 text-slate-600 dark:text-slate-300">
                           Generating your image... This can take up to 5 minutes.
                         </p>
