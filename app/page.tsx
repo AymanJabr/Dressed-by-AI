@@ -491,9 +491,9 @@ export default function Home() {
 
                   <div className="flex-grow flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
                     {isLoading ? (
-                      <div className="mt-8 flex justify-center">
+                      <div className="mt-8 flex flex-col items-center">
                         <LoadingSpinner />
-                        <p className="ml-3 text-slate-600 dark:text-slate-300">
+                        <p className="mt-3 text-slate-600 dark:text-slate-300">
                           Generating your image... This can take up to 5 minutes.
                         </p>
                       </div>
@@ -589,12 +589,6 @@ export default function Home() {
                     {error && (
                       <div className="mt-4 p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-lg text-sm">
                         {error}
-                        <button
-                          onClick={reset}
-                          className="ml-2 text-red-700 dark:text-red-200 underline hover:no-underline"
-                        >
-                          Try Again
-                        </button>
                       </div>
                     )}
                   </div>

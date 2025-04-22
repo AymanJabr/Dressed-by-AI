@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import Image from 'next/image';
 
 interface ImageUploaderProps {
     onImageSelected: (file: File | null) => void;
