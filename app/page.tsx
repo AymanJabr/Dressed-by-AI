@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import ImageUploader from './components/ImageUploader';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -9,24 +9,24 @@ import { ApiKeyConfig as ApiKeyConfigType } from './types';
 
 // Default models with descriptions
 const DEFAULT_PEOPLE = [
-  { id: 'person1', path: '/people/person1.jpg', label: 'Person 1', description: 'Young woman with dark hair' },
-  { id: 'person2', path: '/people/person2.jpg', label: 'Person 2', description: 'Asian woman with shoulder-length hair' },
-  { id: 'person3', path: '/people/person3.jpg', label: 'Person 3', description: 'Blonde woman with long hair' },
-  { id: 'person4', path: '/people/person4.jpg', label: 'Person 4', description: 'Man with short dark hair and beard' },
-  { id: 'person5', path: '/people/person5.jpg', label: 'Person 5', description: 'Woman with curly brown hair' },
-  { id: 'person6', path: '/people/person6.jpg', label: 'Person 6', description: 'Man with dark hair and medium build' },
+  { id: 'person1', path: '/people/person1.jpg', label: 'Person 1', description: 'Young woman with brown hair, hands on hips' },
+  { id: 'person2', path: '/people/person2.jpg', label: 'Person 2', description: 'Asian woman, waevy black hair' },
+  { id: 'person3', path: '/people/person3.jpg', label: 'Person 3', description: 'Stylish man, short black hair' },
+  { id: 'person4', path: '/people/person4.jpg', label: 'Person 4', description: 'Asian fat business man, bending slightly' },
+  { id: 'person5', path: '/people/person5.jpg', label: 'Person 5', description: 'Thin Asian woman, black straight hair' },
+  { id: 'person6', path: '/people/person6.jpg', label: 'Person 6', description: 'Small caucasian woman, blonde short hair, hands on hips' },
 ];
 
 const DEFAULT_CLOTHING = [
   { id: 'clothing1', path: '/clothing/item1.jpg', label: 'Clothing 1', description: 'Black NASA logo t-shirt' },
   { id: 'clothing2', path: '/clothing/item2.jpg', label: 'Clothing 2', description: 'Orange/Yellowish cotton sweater' },
   { id: 'clothing3', path: '/clothing/item3.jpg', label: 'Clothing 3', description: 'Red Christmas sweater' },
-  { id: 'clothing4', path: '/clothing/item4.jpg', label: 'Clothing 4', description: 'Blue evening gown' },
+  { id: 'clothing4', path: '/clothing/item4.jpg', label: 'Clothing 4', description: 'Green long dress' },
   { id: 'clothing5', path: '/clothing/item5.jpg', label: 'Clothing 5', description: 'Floral black, pink, and red dress' },
-  { id: 'clothing6', path: '/clothing/item6.jpg', label: 'Clothing 6', description: 'Blue denim jeans' },
-  { id: 'clothing7', path: '/clothing/item7.jpg', label: 'Clothing 7', description: 'Red cardigan' },
-  { id: 'clothing8', path: '/clothing/item8.jpg', label: 'Clothing 8', description: 'Green hoodie' },
-  { id: 'clothing9', path: '/clothing/item9.jpg', label: 'Clothing 9', description: 'Beige trench coat' },
+  { id: 'clothing6', path: '/clothing/item6.jpg', label: 'Clothing 6', description: '3-piece suit, grey and black' },
+  { id: 'clothing7', path: '/clothing/item7.jpg', label: 'Clothing 7', description: 'Blue and green striped skirt' },
+  { id: 'clothing8', path: '/clothing/item8.jpg', label: 'Clothing 8', description: 'Black leather skirt' },
+  { id: 'clothing9', path: '/clothing/item9.jpg', label: 'Clothing 9', description: 'Cargo shorts' },
 ];
 
 export default function Home() {
@@ -41,11 +41,24 @@ export default function Home() {
 
   // States for default images
   const [selectedDefaultPerson, setSelectedDefaultPerson] = useState<string | null>(null);
-  const [selectedDefaultPersonIndex, setSelectedDefaultPersonIndex] = useState<number | null>(null);
   const [selectedDefaultClothing, setSelectedDefaultClothing] = useState<string | null>(null);
-  const [selectedDefaultClothingIndex, setSelectedDefaultClothingIndex] = useState<number | null>(null);
   const [useDefaultPerson, setUseDefaultPerson] = useState(false);
   const [useDefaultClothing, setUseDefaultClothing] = useState(false);
+
+  // Refs to store URLs that need to be revoked when component unmounts
+  const objectUrlsRef = useRef<string[]>([]);
+
+  // Cleanup function to release object URLs
+  useEffect(() => {
+    return () => {
+      // Clean up any ObjectURLs to prevent memory leaks
+      objectUrlsRef.current.forEach(url => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, []);
 
   const handleModelDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setModelDescription(e.target.value);
@@ -57,7 +70,6 @@ export default function Home() {
 
   const handleSelectDefaultPerson = (path: string, index: number) => {
     setSelectedDefaultPerson(path);
-    setSelectedDefaultPersonIndex(index);
     setPersonImage(null);
     setUseDefaultPerson(true);
     setModelDescription(DEFAULT_PEOPLE[index].description);
@@ -65,17 +77,24 @@ export default function Home() {
 
   const handleSelectDefaultClothing = (path: string, index: number) => {
     setSelectedDefaultClothing(path);
-    setSelectedDefaultClothingIndex(index);
     setClothingImage(null);
     setUseDefaultClothing(true);
     setClothDescription(DEFAULT_CLOTHING[index].description);
   };
 
   const handleUploadPerson = (file: File | null) => {
+    // Clean up previous ObjectURL if exists
+    if (personImage && !selectedDefaultPerson) {
+      const oldUrl = URL.createObjectURL(personImage);
+      if (objectUrlsRef.current.includes(oldUrl)) {
+        URL.revokeObjectURL(oldUrl);
+        objectUrlsRef.current = objectUrlsRef.current.filter(url => url !== oldUrl);
+      }
+    }
+
     if (file) {
       setPersonImage(file);
       setSelectedDefaultPerson(null);
-      setSelectedDefaultPersonIndex(null);
       setUseDefaultPerson(false);
       // Clear the model description when uploading own image
       setModelDescription('');
@@ -85,10 +104,18 @@ export default function Home() {
   };
 
   const handleUploadClothing = (file: File | null) => {
+    // Clean up previous ObjectURL if exists
+    if (clothingImage && !selectedDefaultClothing) {
+      const oldUrl = URL.createObjectURL(clothingImage);
+      if (objectUrlsRef.current.includes(oldUrl)) {
+        URL.revokeObjectURL(oldUrl);
+        objectUrlsRef.current = objectUrlsRef.current.filter(url => url !== oldUrl);
+      }
+    }
+
     if (file) {
       setClothingImage(file);
       setSelectedDefaultClothing(null);
-      setSelectedDefaultClothingIndex(null);
       setUseDefaultClothing(false);
       // Clear the cloth description when uploading own image
       setClothDescription('');
@@ -97,10 +124,33 @@ export default function Home() {
     }
   };
 
+  // Create a safe URL for an image file, tracking it for cleanup
+  const createSafeObjectUrl = (file: File | null): string | null => {
+    if (!file) return null;
+
+    const url = URL.createObjectURL(file);
+    objectUrlsRef.current.push(url);
+    return url;
+  };
+
   const fetchImageAsFile = async (url: string, fileName: string): Promise<File> => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new File([blob], fileName, { type: blob.type });
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
+      }
+      const blob = await response.blob();
+      return new File([blob], fileName, { type: blob.type });
+    } catch (error) {
+      console.error('Error fetching image:', error);
+      throw error;
+    }
+  };
+
+  const reset = () => {
+    // Allow user to try again after an error or if they want to generate a new image
+    setIsLoading(false);
+    setError(null);
   };
 
   const handleSubmit = async () => {
@@ -116,7 +166,9 @@ export default function Home() {
 
     setIsLoading(true);
     setError(null);
-    setResultImage(null);
+
+    // Don't clear resultImage until we receive a new one to avoid UI flicker
+    // setResultImage(null);
 
     try {
       const formData = new FormData();
@@ -148,23 +200,88 @@ export default function Home() {
         formData.append('clothDescription', clothDescription);
       }
 
+      console.log('🔄 Sending request to API endpoint');
+      const startTime = Date.now();
+
       const response = await fetch('/api/generate', {
         method: 'POST',
-        body: formData,
+        body: formData
       });
+
+      const requestDuration = Date.now() - startTime;
+      console.log(`✅ Received API response in ${requestDuration}ms`);
+      console.log(`Response status: ${response.status}`);
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+        throw new Error(data.error || `Request failed with status ${response.status}`);
+      }
+
+      console.log('🔄 Processing API response data');
+      const parseStartTime = Date.now();
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong');
+      const parseEndTime = Date.now();
+      console.log(`✅ Parsed JSON response in ${parseEndTime - parseStartTime}ms`);
+
+      if (!data.imageUrl) {
+        throw new Error('Response did not contain an image URL');
       }
 
-      setResultImage(data.imageUrl);
-    } catch (err) {
+      // Log the size of the received data
+      if (data.imageUrl) {
+        const imageSize = data.imageUrl.length;
+        console.log(`📊 Received image URL of size: ${(imageSize / 1024 / 1024).toFixed(2)} MB`);
+      }
+
+      // Try to optimize the image storage by converting to a Blob URL instead of keeping the base64
+      try {
+        console.log('🔄 Converting base64 to Blob URL to save memory');
+        const optimizeStartTime = Date.now();
+
+        if (data.imageUrl && data.imageUrl.startsWith('data:')) {
+          const base64Response = await fetch(data.imageUrl);
+          const blob = await base64Response.blob();
+
+          // Revoke any previous object URL to prevent memory leaks
+          if (resultImage && resultImage.startsWith('blob:')) {
+            URL.revokeObjectURL(resultImage);
+          }
+
+          // Create a blob URL which is more memory efficient
+          const blobUrl = URL.createObjectURL(blob);
+          objectUrlsRef.current.push(blobUrl);
+
+          const optimizeEndTime = Date.now();
+          console.log(`✅ Converted to Blob URL in ${optimizeEndTime - optimizeStartTime}ms`);
+          console.log(`Blob size: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
+
+          // Set the blob URL instead of the base64 string
+          setResultImage(blobUrl);
+        } else {
+          // Fall back to using the original imageUrl if it's not a data URL
+          setResultImage(data.imageUrl);
+        }
+      } catch (optimizeError) {
+        console.error('Error optimizing image:', optimizeError);
+        // Fall back to using the original imageUrl
+        setResultImage(data.imageUrl);
+      }
+    } catch (err: any) {
       setError(err instanceof Error ? err.message : 'Failed to generate image');
       console.error(err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setResultImage(null);
+    setError(null);
+    // Clear URLs from memory
+    if (resultImage && resultImage.startsWith('blob:')) {
+      URL.revokeObjectURL(resultImage);
     }
   };
 
@@ -232,7 +349,7 @@ export default function Home() {
                     <ImageUploader
                       onImageSelected={handleUploadPerson}
                       label="Upload a photo of yourself"
-                      imagePreview={personImage ? URL.createObjectURL(personImage) : null}
+                      imagePreview={personImage ? createSafeObjectUrl(personImage) : null}
                     />
                   </div>
 
@@ -285,7 +402,7 @@ export default function Home() {
                     <ImageUploader
                       onImageSelected={handleUploadClothing}
                       label="Upload a clothing item"
-                      imagePreview={clothingImage ? URL.createObjectURL(clothingImage) : null}
+                      imagePreview={clothingImage ? createSafeObjectUrl(clothingImage) : null}
                     />
                   </div>
 
@@ -313,25 +430,54 @@ export default function Home() {
 
                   <div className="flex-grow flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
                     {isLoading ? (
-                      <div className="flex flex-col items-center">
+                      <div className="mt-8 flex justify-center">
                         <LoadingSpinner />
-                        <p className="mt-4 text-gray-600 dark:text-gray-400">Generating your virtual try-on...</p>
+                        <p className="ml-3 text-slate-600 dark:text-slate-300">
+                          Generating your image... This can take up to a minute.
+                        </p>
                       </div>
                     ) : resultImage ? (
-                      <div className="max-h-full flex flex-col items-center">
-                        <Image
-                          src={resultImage}
-                          alt="AI generated try-on"
-                          width={400}
-                          height={600}
-                          className="max-h-[500px] w-auto object-contain rounded-lg shadow-lg"
-                        />
-                        <button
-                          onClick={() => window.open(resultImage, '_blank')}
-                          className="mt-4 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded"
-                        >
-                          View Full Size
-                        </button>
+                      <div className="mt-8 flex flex-col items-center">
+                        <div className="relative max-w-md overflow-hidden rounded-lg shadow-lg">
+                          <Image
+                            src={resultImage}
+                            alt="Generated outfit"
+                            width={512}
+                            height={768}
+                            className="w-full h-auto"
+                            unoptimized={true}
+                            onLoad={() => console.log('✅ Image loaded successfully')}
+                            onError={(e) => console.error('❌ Error loading image:', e)}
+                          />
+                          <button
+                            className="absolute bottom-4 right-4 rounded-full bg-slate-700/70 p-2 text-white hover:bg-slate-600/70 focus:outline-none focus:ring-2 focus:ring-slate-500"
+                            onClick={() => window.open(resultImage, '_blank')}
+                            aria-label="Open full size image"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="mt-4">
+                          <button
+                            onClick={handleReset}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
+                          >
+                            Reset
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <div className="text-center text-gray-500 dark:text-gray-400">
@@ -342,6 +488,12 @@ export default function Home() {
                     {error && (
                       <div className="mt-4 p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-lg text-sm">
                         {error}
+                        <button
+                          onClick={reset}
+                          className="ml-2 text-red-700 dark:text-red-200 underline hover:no-underline"
+                        >
+                          Try Again
+                        </button>
                       </div>
                     )}
                   </div>

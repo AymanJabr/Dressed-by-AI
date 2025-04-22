@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 
 interface ImageUploaderProps {
@@ -11,7 +11,27 @@ interface ImageUploaderProps {
 
 export default function ImageUploader({ onImageSelected, label, imagePreview }: ImageUploaderProps) {
     const [isDragging, setIsDragging] = useState(false);
+    const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Clean up any locally created object URLs
+    useEffect(() => {
+        // When component unmounts or imagePreview changes, clean up old blob URLs
+        return () => {
+            if (localPreviewUrl && localPreviewUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(localPreviewUrl);
+            }
+        };
+    }, [localPreviewUrl]);
+
+    // Use the provided preview or create a local one for safety
+    useEffect(() => {
+        if (imagePreview) {
+            setLocalPreviewUrl(imagePreview);
+        } else {
+            setLocalPreviewUrl(null);
+        }
+    }, [imagePreview]);
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -53,13 +73,12 @@ export default function ImageUploader({ onImageSelected, label, imagePreview }: 
 
     return (
         <div className="w-full">
-            {imagePreview ? (
+            {localPreviewUrl ? (
                 <div className="relative w-full h-64 mb-4">
-                    <Image
-                        src={imagePreview}
+                    <img
+                        src={localPreviewUrl}
                         alt="Preview"
-                        fill
-                        className="object-contain rounded-md"
+                        className="object-contain rounded-md w-full h-full"
                     />
                     <button
                         className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full w-8 h-8 flex items-center justify-center"
