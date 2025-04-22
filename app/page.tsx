@@ -406,7 +406,23 @@ export default function Home() {
 
                   {/* Or upload your own */}
                   <div>
-                    <div className="text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Or upload your own</div>
+                    <div className="text-sm font-medium mb-2 text-slate-700 dark:text-slate-300 flex items-center">
+                      Or upload your own
+                      <div className="relative ml-1 group">
+                        <div className="w-5 h-5 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 cursor-help">
+                          ?
+                        </div>
+                        <div className="absolute left-0 bottom-full mb-2 w-64 p-3 bg-white dark:bg-gray-800 rounded shadow-lg text-xs text-gray-700 dark:text-gray-300 invisible group-hover:visible z-10 border border-gray-200 dark:border-gray-700">
+                          <p className="font-bold mb-1">Best Practices:</p>
+                          <ul className="list-disc list-inside space-y-1">
+                            <li>Use high-resolution, well-lit photos</li>
+                            <li>Show full torso/body (not just face)</li>
+                            <li>Use plain backgrounds</li>
+                            <li>Avoid blurry or cluttered images</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
                     <ImageUploader
                       onImageSelected={handleUploadPerson}
                       label="Upload a photo of yourself"
@@ -459,7 +475,23 @@ export default function Home() {
 
                   {/* Or upload your own */}
                   <div>
-                    <div className="text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Or upload your own</div>
+                    <div className="text-sm font-medium mb-2 text-slate-700 dark:text-slate-300 flex items-center">
+                      Or upload your own
+                      <div className="relative ml-1 group">
+                        <div className="w-5 h-5 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-sm text-gray-500 dark:text-gray-400 cursor-help">
+                          ?
+                        </div>
+                        <div className="absolute left-0 bottom-full mb-2 w-64 p-3 bg-white dark:bg-gray-800 rounded shadow-lg text-xs text-gray-700 dark:text-gray-300 invisible group-hover:visible z-10 border border-gray-200 dark:border-gray-700">
+                          <p className="font-bold mb-1">Best Practices:</p>
+                          <ul className="list-disc list-inside space-y-1">
+                            <li>Use high-resolution images of clothing</li>
+                            <li>Plain/white backgrounds work best</li>
+                            <li>Avoid cluttered or styled images</li>
+                            <li>Make sure the entire garment is visible</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
                     <ImageUploader
                       onImageSelected={handleUploadClothing}
                       label="Upload a clothing item"
