@@ -114,7 +114,7 @@ export default function ImageUploader({ onImageSelected, label, imagePreview }: 
                     <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
                         <span className="font-semibold">{label}</span>
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG or GIF</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, or JPG</p>
                 </div>
             )}
             <input

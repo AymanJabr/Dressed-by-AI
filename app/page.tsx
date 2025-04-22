@@ -38,6 +38,11 @@ export default function Home() {
   const [apiConfig, setApiConfig] = useState<ApiKeyConfigType | null>(null);
   const [modelDescription, setModelDescription] = useState<string>('');
   const [clothDescription, setClothDescription] = useState<string>('');
+  const [isFullViewOpen, setIsFullViewOpen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   // States for default images
   const [selectedDefaultPerson, setSelectedDefaultPerson] = useState<string | null>(null);
@@ -285,6 +290,62 @@ export default function Home() {
     }
   };
 
+  const handleDownloadImage = () => {
+    if (resultImage) {
+      // Create an anchor element
+      const a = document.createElement('a');
+      a.href = resultImage;
+      a.download = 'dressed-by-ai-outfit.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
+
+  const handleOpenFullView = () => {
+    setIsFullViewOpen(true);
+    // Reset zoom and position when opening the modal
+    setZoomLevel(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  const handleCloseFullView = () => {
+    setIsFullViewOpen(false);
+  };
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.25, 3));  // Max zoom of 3x
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.25, 1));  // Min zoom of 1x
+  };
+
+  const handleZoomReset = () => {
+    setZoomLevel(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoomLevel > 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && zoomLevel > 1) {
+      setPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
   const handleApiConfigured = (config: ApiKeyConfigType) => {
     setApiConfig(config);
   };
@@ -433,7 +494,7 @@ export default function Home() {
                       <div className="mt-8 flex justify-center">
                         <LoadingSpinner />
                         <p className="ml-3 text-slate-600 dark:text-slate-300">
-                          Generating your image... This can take up to a minute.
+                          Generating your image... This can take up to 5 minutes.
                         </p>
                       </div>
                     ) : resultImage ? (
@@ -470,12 +531,52 @@ export default function Home() {
                             </svg>
                           </button>
                         </div>
-                        <div className="mt-4">
+                        <div className="mt-4 flex gap-3">
                           <button
-                            onClick={handleReset}
-                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
+                            onClick={handleDownloadImage}
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center"
                           >
-                            Reset
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 mr-1"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                              />
+                            </svg>
+                            Download
+                          </button>
+                          <button
+                            onClick={handleOpenFullView}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 mr-1"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                            Full View
                           </button>
                         </div>
                       </div>
@@ -517,6 +618,113 @@ export default function Home() {
           </>
         )}
       </div>
+
+      {/* Full View Modal */}
+      {isFullViewOpen && resultImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div
+            className="relative max-w-4xl max-h-[90vh] overflow-hidden"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            style={{ cursor: zoomLevel > 1 ? 'grab' : 'default' }}
+          >
+            <div style={{
+              transform: `scale(${zoomLevel})`,
+              transformOrigin: 'center center',
+              transition: 'transform 0.1s ease-out',
+              position: 'relative',
+              left: `${position.x}px`,
+              top: `${position.y}px`
+            }}>
+              <Image
+                src={resultImage}
+                alt="Generated outfit full view"
+                width={1024}
+                height={1536}
+                className="max-w-full max-h-[85vh] object-contain"
+                unoptimized={true}
+                style={{ pointerEvents: 'none' }}
+              />
+            </div>
+
+            {/* Close button */}
+            <button
+              onClick={handleCloseFullView}
+              className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70"
+              aria-label="Close full view"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            {/* Zoom controls */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 rounded-lg flex items-center p-2 space-x-3">
+              <button
+                onClick={handleZoomOut}
+                className="text-white p-1 hover:bg-gray-700 rounded"
+                disabled={zoomLevel <= 1}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M20 12H4"
+                  />
+                </svg>
+              </button>
+
+              <button
+                onClick={handleZoomReset}
+                className="text-white px-2 py-1 hover:bg-gray-700 rounded text-sm"
+              >
+                {Math.round(zoomLevel * 100)}%
+              </button>
+
+              <button
+                onClick={handleZoomIn}
+                className="text-white p-1 hover:bg-gray-700 rounded"
+                disabled={zoomLevel >= 3}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
