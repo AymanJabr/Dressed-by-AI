@@ -6,11 +6,12 @@ export async function POST(request: Request) {
         const personImage = formData.get('personImage') as File;
         const clothingImage = formData.get('clothingImage') as File;
         const apiKey = formData.get('apiKey') as string;
-        const category = formData.get('category') as 'upper_body' | 'lower_body' | 'dresses' || 'upper_body';
+        const modelDescription = formData.get('modelDescription') as string || '';
+        const clothDescription = formData.get('clothDescription') as string || '';
 
-        if (!personImage || !clothingImage) {
+        if (!clothingImage) {
             return NextResponse.json(
-                { error: 'Both person and clothing images are required' },
+                { error: 'Clothing image is required' },
                 { status: 400 }
             );
         }
@@ -23,22 +24,43 @@ export async function POST(request: Request) {
         }
 
         // Convert images to base64
-        const personBase64 = Buffer.from(await personImage.arrayBuffer()).toString('base64');
         const clothingBase64 = Buffer.from(await clothingImage.arrayBuffer()).toString('base64');
+        // Person image is optional in Segfit v1.1
+        const personBase64 = personImage
+            ? Buffer.from(await personImage.arrayBuffer()).toString('base64')
+            : null;
 
         // Create data for Segmind API
-        const data = {
-            crop: false, // Set to true if image isn't 3:4 ratio
-            seed: 42,
-            steps: 30,
-            category: category,
-            force_dc: category === 'dresses', // Set force_dc to true when category is dresses as per API docs
-            human_img: personBase64,  // No data:image prefix
-            garm_img: clothingBase64, // No data:image prefix
-            mask_only: false
+        const data: Record<string, any> = {
+            outfit_image: clothingBase64,
+            background_description: "aesthetic studio shoot",
+            aspect_ratio: "2:3",
+            model_type: "Balanced",
+            controlnet_type: "Depth",
+            cn_strength: 0.3,
+            cn_end: 0.3,
+            image_format: "png",
+            image_quality: 95,
+            seed: -1,
+            upscale: false,
+            base64: false
         };
 
-        const url = "https://api.segmind.com/v1/idm-vton";
+        // Add optional parameters if provided
+        if (modelDescription) {
+            data.model_description = modelDescription;
+        }
+
+        if (clothDescription) {
+            data.cloth_description = clothDescription;
+        }
+
+        // Add model_image if provided
+        if (personBase64) {
+            data.model_image = personBase64;
+        }
+
+        const url = "https://api.segmind.com/v1/segfit-v1.1";
 
         // Call Segmind API using native fetch
         try {
@@ -61,8 +83,13 @@ export async function POST(request: Request) {
                     );
                 } else if (status === 429) {
                     return NextResponse.json(
-                        { error: 'Segmind API rate limit exceeded. Please try again later.' },
+                        { error: 'Segmind API rate limit exceeded. In the free tier, this is about 1 generation a minute.' },
                         { status: 429 }
+                    );
+                } else if (status === 406) {
+                    return NextResponse.json(
+                        { error: 'Not enough credits in your Segmind account.' },
+                        { status: 406 }
                     );
                 }
 

@@ -4,10 +4,10 @@ A virtual try-on application that uses AI to visualize how clothing items would 
 
 ## Features
 
-- Choose from 6 default person models or upload your own photo
-- Select from default clothing items or upload your own
-- Support for multiple clothing categories (upper body, lower body, dresses)
-- AI-powered virtual try-on using Segmind's IDM-VTON model
+- Choose from 6 default person models or upload your own photo (optional with Segfit v1.1)
+- Select from 9 default clothing items or upload your own
+- Add optional descriptions for both models and clothing items
+- AI-powered virtual try-on using Segmind's Segfit v1.1 model
 - Mobile-responsive design
 - Dark mode support
 
@@ -16,7 +16,7 @@ A virtual try-on application that uses AI to visualize how clothing items would 
 - Next.js 15 with Turbopack
 - TypeScript
 - Tailwind CSS
-- Segmind IDM-VTON API for virtual try-on
+- Segmind Segfit v1.1 API for virtual try-on
 
 ## Getting Started
 
@@ -59,22 +59,27 @@ pnpm start
 ## Usage
 
 1. Enter your Segmind API key in the configuration screen
-2. Select a clothing category (upper body, lower body, or dresses)
-3. Choose from default person models or upload your own photo
+2. Choose from default person models or upload your own photo (optional)
+3. Add an optional description for the person model
 4. Select from default clothing items or upload your own
-5. Click "Create Virtual Try-On"
-6. Wait for the AI to generate your try-on image
-7. View and save the result
+5. Add an optional description for the clothing item
+6. Click "Generate Try-On"
+7. Wait for the AI to generate your try-on image
+8. View and save the result
 
 ## API Information
 
-This project uses the Segmind IDM-VTON API for virtual try-on functionality. The API has the following attributes:
+This project uses the Segmind Segfit v1.1 API for virtual try-on functionality. The API has the following key attributes:
 
-- **Category**: Choose between `upper_body`, `lower_body`, or `dresses`
-- **Force DC**: Automatically enabled for dresses category
-- **Crop**: Option for non-standard image ratios
+- **outfit_image** (required): The clothing item image
+- **model_image** (optional): A reference person image
+- **model_description** (optional): Description of the person model (gender, nationality, etc.)
+- **cloth_description** (optional): Description of the clothing item
+- **background_description**: Description of the background setting (fixed at "aesthetic studio shoot")
+- **aspect_ratio**: Output image ratio (default is 2:3)
+- **model_type**: Quality setting (Speed, Balanced, Quality)
 
-For more information on the Segmind API, visit their documentation at https://cloud.segmind.com/
+For more information on the Segmind Segfit v1.1 API, visit their documentation at https://www.segmind.com/models/segfit-v1.1/api
 
 ## Adding Default Models
 
@@ -83,11 +88,8 @@ The application comes with a directory structure for default models:
 ```
 public/
 ├── people/         # Person model images (person1.jpg - person6.jpg)
-└── clothing/
-    ├── upper_body/ # Upper body clothing items (item1.jpg - item3.jpg)
-    ├── lower_body/ # Lower body clothing items (item1.jpg - item3.jpg)
-    └── dresses/    # Dress items (item1.jpg - item3.jpg)
+└── clothing/       # Clothing items (item1.jpg - item9.jpg)
 ```
 
-You can replace these images with your own default models, maintaining the same naming convention.
+Each default model comes with a predefined description. You can replace these images with your own default models, maintaining the same naming convention, and update the descriptions in the code.
 
