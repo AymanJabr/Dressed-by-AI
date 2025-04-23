@@ -168,6 +168,10 @@ export default function ApiKeyConfig({
                                 Segmind Console
                             </a>
                         </span>
+                        <div className="mt-1 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800 rounded-md">
+                            <p className="font-medium">🔐 Security Tip:</p>
+                            <p>For extra safety, we recommend generating a new API key specifically for testing this project, and deleting it afterward.</p>
+                        </div>
                     </div>
                 </div>
 
