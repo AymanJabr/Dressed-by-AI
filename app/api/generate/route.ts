@@ -1,5 +1,21 @@
 import { NextResponse } from 'next/server';
 
+// Define proper error interfaces
+interface ApiError extends Error {
+    name: string;
+    message: string;
+    status?: number;
+}
+
+// Type guard functions
+function isApiError(error: unknown): error is ApiError {
+    return error instanceof Error && 'name' in error;
+}
+
+function isError(error: unknown): error is Error {
+    return error instanceof Error;
+}
+
 // Set a longer response processing timeout
 export const maxDuration = 300; // 5 minutes timeout for serverless function
 
@@ -70,7 +86,7 @@ export async function POST(request: Request) {
         logMemoryUsage();
 
         // Create data for Segmind API
-        const data: Record<string, any> = {
+        const data: Record<string, unknown> = {
             outfit_image: clothingBase64,
             background_description: "aesthetic studio shoot",
             aspect_ratio: "2:3",
@@ -251,9 +267,11 @@ export async function POST(request: Request) {
                     { status: 500 }
                 );
             }
-        } catch (apiError: any) {
+        } catch (apiError) {
+            console.error('Segmind API error:', apiError);
+
             // Check if the error is an abort error
-            if (apiError.name === 'AbortError') {
+            if (isApiError(apiError) && apiError.name === 'AbortError') {
                 console.error('API request timed out');
                 return NextResponse.json(
                     { error: 'The request to the image generation API timed out. The service might be experiencing high load.' },
@@ -261,19 +279,17 @@ export async function POST(request: Request) {
                 );
             }
 
-            console.error('Segmind API error:', apiError);
-
             // Generic error handling
             return NextResponse.json(
-                { error: apiError.message || 'Segmind API error' },
+                { error: isError(apiError) ? apiError.message : 'Segmind API error' },
                 { status: 500 }
             );
         }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error generating image:', error);
         logMemoryUsage();
         return NextResponse.json(
-            { error: error.message || 'Failed to generate image' },
+            { error: isError(error) ? error.message : 'Failed to generate image' },
             { status: 500 }
         );
     }

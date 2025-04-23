@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface ImageUploaderProps {
     onImageSelected: (file: File | null) => void;
@@ -74,10 +75,12 @@ export default function ImageUploader({ onImageSelected, label, imagePreview }: 
         <div className="w-full">
             {localPreviewUrl ? (
                 <div className="relative w-full h-64 mb-4">
-                    <img
+                    <Image
                         src={localPreviewUrl}
                         alt="Preview"
-                        className="object-contain rounded-md w-full h-full"
+                        fill
+                        className="object-contain rounded-md"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                     <button
                         className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full w-8 h-8 flex items-center justify-center"

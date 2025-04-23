@@ -266,20 +266,11 @@ export default function useTryOnLogic() {
                 // Fall back to using the original imageUrl
                 setResultImage(data.imageUrl);
             }
-        } catch (err: any) {
+        } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to generate image');
             console.error(err);
         } finally {
             setIsLoading(false);
-        }
-    };
-
-    const handleReset = () => {
-        setResultImage(null);
-        setError(null);
-        // Clear URLs from memory
-        if (resultImage && resultImage.startsWith('blob:')) {
-            URL.revokeObjectURL(resultImage);
         }
     };
 
@@ -355,7 +346,6 @@ export default function useTryOnLogic() {
         clothDescription,
         selectedDefaultPerson,
         selectedDefaultClothing,
-        useDefaultPerson,
         useDefaultClothing,
         isFullViewOpen,
         zoomLevel,
@@ -376,7 +366,6 @@ export default function useTryOnLogic() {
         createSafeObjectUrl,
         reset,
         handleSubmit,
-        handleReset,
         handleDownloadImage,
         handleOpenFullView,
         handleCloseFullView,
