@@ -2,7 +2,6 @@
 
 import ApiKeyConfig from './components/ApiKeyConfig';
 import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
 import PersonSelector from './components/person/PersonSelector';
 import ClothingSelector from './components/clothing/ClothingSelector';
 import ResultPreview from './components/result/ResultPreview';
@@ -107,8 +106,6 @@ export default function Home() {
                 />
               </div>
             </div>
-
-            <Footer />
           </>
         )}
       </div>

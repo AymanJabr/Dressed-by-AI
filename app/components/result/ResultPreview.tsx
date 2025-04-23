@@ -30,8 +30,11 @@ export default function ResultPreview({
                 {isLoading ? (
                     <div className="mt-8 flex flex-col items-center">
                         <LoadingDots />
-                        <p className="mt-3 text-slate-600 dark:text-slate-300">
-                            Generating your image... This can take up to 5 minutes.
+                        <p className="mt-3 text-slate-600 dark:text-slate-300 text-center">
+                            Generating your image...
+                        </p>
+                        <p className="text-slate-600 dark:text-slate-300 text-center">
+                            This can take up to 5 minutes.
                         </p>
                     </div>
                 ) : resultImage ? (
