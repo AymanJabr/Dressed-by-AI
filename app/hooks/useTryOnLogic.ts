@@ -13,13 +13,10 @@ const DEFAULT_PEOPLE = [
 
 const DEFAULT_CLOTHING = [
     { id: 'clothing1', path: '/clothing/item1.jpg', label: 'Clothing 1', description: 'Black NASA logo t-shirt' },
-    { id: 'clothing2', path: '/clothing/item2.jpg', label: 'Clothing 2', description: 'Orange/Yellowish cotton sweater' },
     { id: 'clothing3', path: '/clothing/item3.jpg', label: 'Clothing 3', description: 'Red Christmas sweater' },
     { id: 'clothing4', path: '/clothing/item4.jpg', label: 'Clothing 4', description: 'Green long dress' },
-    { id: 'clothing5', path: '/clothing/item5.jpg', label: 'Clothing 5', description: 'Floral black, pink, and red dress' },
     { id: 'clothing6', path: '/clothing/item6.jpg', label: 'Clothing 6', description: '3-piece suit, grey and black' },
     { id: 'clothing7', path: '/clothing/item7.jpg', label: 'Clothing 7', description: 'Blue and green striped skirt' },
-    { id: 'clothing8', path: '/clothing/item8.jpg', label: 'Clothing 8', description: 'Black leather skirt' },
     { id: 'clothing9', path: '/clothing/item9.jpg', label: 'Clothing 9', description: 'Cargo shorts' },
 ];
 
@@ -30,8 +27,6 @@ export default function useTryOnLogic() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [apiConfig, setApiConfig] = useState<ApiKeyConfigType | null>(null);
-    const [modelDescription, setModelDescription] = useState<string>('');
-    const [clothDescription, setClothDescription] = useState<string>('');
 
     // States for default images
     const [selectedDefaultPerson, setSelectedDefaultPerson] = useState<string | null>(null);
@@ -61,26 +56,16 @@ export default function useTryOnLogic() {
         };
     }, []);
 
-    const handleModelDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setModelDescription(e.target.value);
-    };
-
-    const handleClothDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setClothDescription(e.target.value);
-    };
-
-    const handleSelectDefaultPerson = (path: string, index: number) => {
+    const handleSelectDefaultPerson = (path: string) => {
         setSelectedDefaultPerson(path);
         setPersonImage(null);
         setUseDefaultPerson(true);
-        setModelDescription(DEFAULT_PEOPLE[index].description);
     };
 
-    const handleSelectDefaultClothing = (path: string, index: number) => {
+    const handleSelectDefaultClothing = (path: string) => {
         setSelectedDefaultClothing(path);
         setClothingImage(null);
         setUseDefaultClothing(true);
-        setClothDescription(DEFAULT_CLOTHING[index].description);
     };
 
     const handleUploadPerson = (file: File | null) => {
@@ -97,8 +82,6 @@ export default function useTryOnLogic() {
             setPersonImage(file);
             setSelectedDefaultPerson(null);
             setUseDefaultPerson(false);
-            // Clear the model description when uploading own image
-            setModelDescription('');
         } else {
             setPersonImage(null);
         }
@@ -118,8 +101,6 @@ export default function useTryOnLogic() {
             setClothingImage(file);
             setSelectedDefaultClothing(null);
             setUseDefaultClothing(false);
-            // Clear the cloth description when uploading own image
-            setClothDescription('');
         } else {
             setClothingImage(null);
         }
@@ -148,15 +129,14 @@ export default function useTryOnLogic() {
         }
     };
 
-    const reset = () => {
-        // Allow user to try again after an error or if they want to generate a new image
-        setIsLoading(false);
-        setError(null);
-    };
-
     const handleSubmit = async () => {
         if (!useDefaultClothing && !clothingImage) {
             setError('Please select or upload a clothing item image');
+            return;
+        }
+
+        if (!useDefaultPerson && !personImage) {
+            setError('Please select or upload a person image');
             return;
         }
 
@@ -171,7 +151,7 @@ export default function useTryOnLogic() {
         try {
             const formData = new FormData();
 
-            // Handle person image (default or uploaded) - optional in Segfit v1.1
+            // Handle person image (default or uploaded) - now required
             if (useDefaultPerson && selectedDefaultPerson) {
                 const personFile = await fetchImageAsFile(selectedDefaultPerson, 'default-person.jpg');
                 formData.append('personImage', personFile);
@@ -188,15 +168,6 @@ export default function useTryOnLogic() {
             }
 
             formData.append('apiKey', apiConfig.apiKey);
-
-            // Add descriptions if they exist
-            if (modelDescription) {
-                formData.append('modelDescription', modelDescription);
-            }
-
-            if (clothDescription) {
-                formData.append('clothDescription', clothDescription);
-            }
 
             console.log('🔄 Sending request to API endpoint');
             const startTime = Date.now();
@@ -342,11 +313,10 @@ export default function useTryOnLogic() {
         isLoading,
         error,
         apiConfig,
-        modelDescription,
-        clothDescription,
         selectedDefaultPerson,
         selectedDefaultClothing,
         useDefaultClothing,
+        useDefaultPerson,
         isFullViewOpen,
         zoomLevel,
         position,
@@ -357,14 +327,11 @@ export default function useTryOnLogic() {
         DEFAULT_CLOTHING,
 
         // Handlers
-        handleModelDescriptionChange,
-        handleClothDescriptionChange,
         handleSelectDefaultPerson,
         handleSelectDefaultClothing,
         handleUploadPerson,
         handleUploadClothing,
         createSafeObjectUrl,
-        reset,
         handleSubmit,
         handleDownloadImage,
         handleOpenFullView,

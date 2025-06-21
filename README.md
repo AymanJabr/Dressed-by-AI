@@ -4,10 +4,9 @@ A virtual try-on application that uses AI to visualize how clothing items would 
 
 ## Features
 
-- Choose from 6 default person models or upload your own photo (optional with Segfit v1.1)
+- Choose from 6 default person models or upload your own photo
 - Select from 9 default clothing items or upload your own
-- Add optional descriptions for both models and clothing items
-- AI-powered virtual try-on using Segmind's Segfit v1.1 model
+- AI-powered virtual try-on using Segmind's Segfit v1.2 model
 - Mobile-responsive design
 - Dark mode support
 
@@ -16,7 +15,7 @@ A virtual try-on application that uses AI to visualize how clothing items would 
 - Next.js 15 with Turbopack
 - TypeScript
 - Tailwind CSS
-- Segmind Segfit v1.1 API for virtual try-on
+- Segmind Segfit v1.2 API for virtual try-on
 
 ## Getting Started
 
@@ -59,27 +58,21 @@ pnpm start
 ## Usage
 
 1. Enter your Segmind API key in the configuration screen
-2. Choose from default person models or upload your own photo (optional)
-3. Add an optional description for the person model
-4. Select from default clothing items or upload your own
-5. Add an optional description for the clothing item
-6. Click "Generate Try-On"
-7. Wait for the AI to generate your try-on image
-8. View and save the result
+2. Choose from default person models or upload your own photo
+3. Select from default clothing items or upload your own
+4. Click "Generate Try-On"
+5. Wait for the AI to generate your try-on image
+6. View and save the result
 
 ## API Information
 
-This project uses the Segmind Segfit v1.1 API for virtual try-on functionality. The API has the following key attributes:
+This project uses the Segmind Segfit v1.2 API for virtual try-on functionality. The API has the following key attributes:
 
 - **outfit_image** (required): The clothing item image
-- **model_image** (optional): A reference person image
-- **model_description** (optional): Description of the person model (gender, nationality, etc.)
-- **cloth_description** (optional): Description of the clothing item
-- **background_description**: Description of the background setting (fixed at "aesthetic studio shoot")
-- **aspect_ratio**: Output image ratio (default is 2:3)
+- **model_image** (required): A reference person image
 - **model_type**: Quality setting (Speed, Balanced, Quality)
 
-For more information on the Segmind Segfit v1.1 API, visit their documentation at https://www.segmind.com/models/segfit-v1.1/api
+For more information on the Segmind Segfit v1.2 API, visit their documentation at https://www.segmind.com/models/segfit-v1.2/api
 
 ## Adding Default Models
 
@@ -91,5 +84,5 @@ public/
 └── clothing/       # Clothing items (item1.jpg - item9.jpg)
 ```
 
-Each default model comes with a predefined description. You can replace these images with your own default models, maintaining the same naming convention, and update the descriptions in the code.
+You can replace these images with your own default models, maintaining the same naming convention.
 
