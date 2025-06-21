@@ -56,13 +56,13 @@ export default function useTryOnLogic() {
         };
     }, []);
 
-    const handleSelectDefaultPerson = (path: string, index: number) => {
+    const handleSelectDefaultPerson = (path: string) => {
         setSelectedDefaultPerson(path);
         setPersonImage(null);
         setUseDefaultPerson(true);
     };
 
-    const handleSelectDefaultClothing = (path: string, index: number) => {
+    const handleSelectDefaultClothing = (path: string) => {
         setSelectedDefaultClothing(path);
         setClothingImage(null);
         setUseDefaultClothing(true);
@@ -127,12 +127,6 @@ export default function useTryOnLogic() {
             console.error('Error fetching image:', error);
             throw error;
         }
-    };
-
-    const reset = () => {
-        // Allow user to try again after an error or if they want to generate a new image
-        setIsLoading(false);
-        setError(null);
     };
 
     const handleSubmit = async () => {
