@@ -1,11 +1,10 @@
 import { getStore } from '@netlify/blobs';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(
-    request: Request,
-    { params }: { params: { jobId: string } }
-) {
-    const { jobId } = params;
+export async function GET(request: NextRequest) {
+    const url = new URL(request.url);
+    const pathSegments = url.pathname.split('/');
+    const jobId = pathSegments.pop();
 
     if (!jobId) {
         return NextResponse.json({ error: 'Job ID is required' }, { status: 400 });
