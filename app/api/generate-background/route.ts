@@ -13,9 +13,12 @@ function formatBytes(bytes: number, decimals = 2) {
 
 export async function POST(request: Request) {
     const store = getStore('results');
+    let jobId: string | undefined;
 
     try {
-        const { personImage, clothingImage, apiKey, jobId } = await request.json();
+        const body = await request.json();
+        const { personImage, clothingImage, apiKey } = body;
+        jobId = body.jobId;
 
         if (!jobId) {
             return NextResponse.json({ error: 'Job ID is required' }, { status: 400 });
@@ -95,17 +98,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true });
 
     } catch (error) {
-        // This is the critical part: ensuring any error updates the blob store
-        const store = getStore('results');
-        let jobId: string | undefined;
-        try {
-            // Try to get the jobId from the request body if available
-            const body = await request.json();
-            jobId = body.jobId;
-        } catch (e) {
-            console.log("error:", e);
-        }
-
         console.error(`[BACKGROUND_ERROR] An unexpected error occurred for job ${jobId || 'unknown'}:`, error);
 
         if (jobId) {
