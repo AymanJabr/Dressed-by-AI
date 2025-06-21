@@ -6,7 +6,6 @@ interface ResultPreviewProps {
     resultImage: string | null;
     error: string | null;
     onSubmit: () => void;
-    onReset: () => void;
     onDownloadImage: () => void;
     onOpenFullView: () => void;
     isButtonDisabled: boolean;
@@ -17,7 +16,6 @@ export default function ResultPreview({
     resultImage,
     error,
     onSubmit,
-    onReset,
     onDownloadImage,
     onOpenFullView,
     isButtonDisabled,
@@ -130,7 +128,7 @@ export default function ResultPreview({
                     <div className="mt-4 p-3 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 rounded-lg text-sm">
                         {error}
                         <button
-                            onClick={onReset}
+                            onClick={onSubmit}
                             className="ml-2 text-red-700 dark:text-red-200 underline hover:no-underline"
                         >
                             Try Again

@@ -10,10 +10,8 @@ interface PersonSelectorProps {
     }>;
     selectedDefaultPerson: string | null;
     personImage: File | null;
-    modelDescription: string;
     onSelectDefaultPerson: (path: string, index: number) => void;
     onUploadPerson: (file: File | null) => void;
-    onModelDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     createSafeObjectUrl: (file: File | null) => string | null;
 }
 
@@ -21,15 +19,13 @@ export default function PersonSelector({
     defaultPeople,
     selectedDefaultPerson,
     personImage,
-    modelDescription,
     onSelectDefaultPerson,
     onUploadPerson,
-    onModelDescriptionChange,
     createSafeObjectUrl,
 }: PersonSelectorProps) {
     return (
         <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-white">Choose Person (Optional)</h2>
+            <h2 className="text-xl font-semibold mb-4 text-slate-800 dark:text-white">Choose Person</h2>
 
             {/* Default People Models */}
             <div className="mb-4">
@@ -77,21 +73,6 @@ export default function PersonSelector({
                     onImageSelected={onUploadPerson}
                     label="Upload a photo of yourself"
                     imagePreview={personImage ? createSafeObjectUrl(personImage) : null}
-                />
-            </div>
-
-            {/* Model Description */}
-            <div className="mt-4">
-                <label htmlFor="modelDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Model Description (Optional)
-                </label>
-                <input
-                    type="text"
-                    id="modelDescription"
-                    className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    value={modelDescription}
-                    onChange={onModelDescriptionChange}
-                    placeholder="Describe the person (e.g., gender, ethnicity, style)"
                 />
             </div>
         </div>

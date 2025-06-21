@@ -51,8 +51,6 @@ export async function POST(request: Request) {
         const personImage = formData.get('personImage') as File;
         const clothingImage = formData.get('clothingImage') as File;
         const apiKey = formData.get('apiKey') as string;
-        const modelDescription = formData.get('modelDescription') as string || '';
-        const clothDescription = formData.get('clothDescription') as string || '';
 
         // Log input image sizes
         console.log('📊 Input image sizes:');
@@ -66,6 +64,13 @@ export async function POST(request: Request) {
             );
         }
 
+        if (!personImage) {
+            return NextResponse.json(
+                { error: 'Person image is required for SegFit v1.2' },
+                { status: 400 }
+            );
+        }
+
         if (!apiKey) {
             return NextResponse.json(
                 { error: 'Segmind API key is required' },
@@ -75,47 +80,27 @@ export async function POST(request: Request) {
 
         // Convert images to base64
         const clothingBase64 = Buffer.from(await clothingImage.arrayBuffer()).toString('base64');
-        // Person image is optional in Segfit v1.1
-        const personBase64 = personImage
-            ? Buffer.from(await personImage.arrayBuffer()).toString('base64')
-            : null;
+        const personBase64 = Buffer.from(await personImage.arrayBuffer()).toString('base64');
 
         console.log('📊 Base64 data sizes:');
         console.log(`  Clothing base64: ${formatBytes(clothingBase64.length)}`);
-        console.log(`  Person base64: ${personBase64 ? formatBytes(personBase64.length) : 'Not provided'}`);
+        console.log(`  Person base64: ${formatBytes(personBase64.length)}`);
         logMemoryUsage();
 
         // Create data for Segmind API
         const data: Record<string, unknown> = {
             outfit_image: clothingBase64,
-            background_description: "aesthetic studio shoot",
-            aspect_ratio: "2:3",
+            model_image: personBase64,
             model_type: "Balanced",
-            controlnet_type: "Depth",
-            cn_strength: 0.3,
-            cn_end: 0.3,
+            cn_strength: 0.35,
+            cn_end: 0.35,
             image_format: "png",
-            image_quality: 85,
-            seed: -1,
-            upscale: false,
+            image_quality: 90,
+            seed: 42,
             base64: true
         };
 
-        // Add optional parameters if provided
-        if (modelDescription) {
-            data.model_description = modelDescription;
-        }
-
-        if (clothDescription) {
-            data.cloth_description = clothDescription;
-        }
-
-        // Add model_image if provided
-        if (personBase64) {
-            data.model_image = personBase64;
-        }
-
-        const url = "https://api.segmind.com/v1/segfit-v1.1";
+        const url = "https://api.segmind.com/v1/segfit-v1.2";
 
         console.log('🔄 Sending request to Segmind API');
         console.log(`  Request payload size: ${formatBytes(JSON.stringify(data).length)}`);

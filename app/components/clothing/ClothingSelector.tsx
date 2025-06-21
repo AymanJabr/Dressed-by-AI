@@ -10,10 +10,8 @@ interface ClothingSelectorProps {
     }>;
     selectedDefaultClothing: string | null;
     clothingImage: File | null;
-    clothDescription: string;
     onSelectDefaultClothing: (path: string, index: number) => void;
     onUploadClothing: (file: File | null) => void;
-    onClothDescriptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     createSafeObjectUrl: (file: File | null) => string | null;
 }
 
@@ -21,10 +19,8 @@ export default function ClothingSelector({
     defaultClothing,
     selectedDefaultClothing,
     clothingImage,
-    clothDescription,
     onSelectDefaultClothing,
     onUploadClothing,
-    onClothDescriptionChange,
     createSafeObjectUrl,
 }: ClothingSelectorProps) {
     return (
@@ -77,21 +73,6 @@ export default function ClothingSelector({
                     onImageSelected={onUploadClothing}
                     label="Upload a clothing item"
                     imagePreview={clothingImage ? createSafeObjectUrl(clothingImage) : null}
-                />
-            </div>
-
-            {/* Cloth Description */}
-            <div className="mt-4">
-                <label htmlFor="clothDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Clothing Description (Optional)
-                </label>
-                <input
-                    type="text"
-                    id="clothDescription"
-                    className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    value={clothDescription}
-                    onChange={onClothDescriptionChange}
-                    placeholder="Describe the clothing item (e.g., color, style, fabric)"
                 />
             </div>
         </div>

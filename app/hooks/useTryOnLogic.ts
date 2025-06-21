@@ -30,8 +30,6 @@ export default function useTryOnLogic() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [apiConfig, setApiConfig] = useState<ApiKeyConfigType | null>(null);
-    const [modelDescription, setModelDescription] = useState<string>('');
-    const [clothDescription, setClothDescription] = useState<string>('');
 
     // States for default images
     const [selectedDefaultPerson, setSelectedDefaultPerson] = useState<string | null>(null);
@@ -61,26 +59,16 @@ export default function useTryOnLogic() {
         };
     }, []);
 
-    const handleModelDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setModelDescription(e.target.value);
-    };
-
-    const handleClothDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setClothDescription(e.target.value);
-    };
-
     const handleSelectDefaultPerson = (path: string, index: number) => {
         setSelectedDefaultPerson(path);
         setPersonImage(null);
         setUseDefaultPerson(true);
-        setModelDescription(DEFAULT_PEOPLE[index].description);
     };
 
     const handleSelectDefaultClothing = (path: string, index: number) => {
         setSelectedDefaultClothing(path);
         setClothingImage(null);
         setUseDefaultClothing(true);
-        setClothDescription(DEFAULT_CLOTHING[index].description);
     };
 
     const handleUploadPerson = (file: File | null) => {
@@ -97,8 +85,6 @@ export default function useTryOnLogic() {
             setPersonImage(file);
             setSelectedDefaultPerson(null);
             setUseDefaultPerson(false);
-            // Clear the model description when uploading own image
-            setModelDescription('');
         } else {
             setPersonImage(null);
         }
@@ -118,8 +104,6 @@ export default function useTryOnLogic() {
             setClothingImage(file);
             setSelectedDefaultClothing(null);
             setUseDefaultClothing(false);
-            // Clear the cloth description when uploading own image
-            setClothDescription('');
         } else {
             setClothingImage(null);
         }
@@ -160,6 +144,11 @@ export default function useTryOnLogic() {
             return;
         }
 
+        if (!useDefaultPerson && !personImage) {
+            setError('Please select or upload a person image');
+            return;
+        }
+
         if (!apiConfig) {
             setError('Please configure your API key first');
             return;
@@ -171,7 +160,7 @@ export default function useTryOnLogic() {
         try {
             const formData = new FormData();
 
-            // Handle person image (default or uploaded) - optional in Segfit v1.1
+            // Handle person image (default or uploaded) - now required
             if (useDefaultPerson && selectedDefaultPerson) {
                 const personFile = await fetchImageAsFile(selectedDefaultPerson, 'default-person.jpg');
                 formData.append('personImage', personFile);
@@ -188,15 +177,6 @@ export default function useTryOnLogic() {
             }
 
             formData.append('apiKey', apiConfig.apiKey);
-
-            // Add descriptions if they exist
-            if (modelDescription) {
-                formData.append('modelDescription', modelDescription);
-            }
-
-            if (clothDescription) {
-                formData.append('clothDescription', clothDescription);
-            }
 
             console.log('🔄 Sending request to API endpoint');
             const startTime = Date.now();
@@ -342,11 +322,10 @@ export default function useTryOnLogic() {
         isLoading,
         error,
         apiConfig,
-        modelDescription,
-        clothDescription,
         selectedDefaultPerson,
         selectedDefaultClothing,
         useDefaultClothing,
+        useDefaultPerson,
         isFullViewOpen,
         zoomLevel,
         position,
@@ -357,14 +336,11 @@ export default function useTryOnLogic() {
         DEFAULT_CLOTHING,
 
         // Handlers
-        handleModelDescriptionChange,
-        handleClothDescriptionChange,
         handleSelectDefaultPerson,
         handleSelectDefaultClothing,
         handleUploadPerson,
         handleUploadClothing,
         createSafeObjectUrl,
-        reset,
         handleSubmit,
         handleDownloadImage,
         handleOpenFullView,

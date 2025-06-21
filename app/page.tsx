@@ -17,8 +17,6 @@ export default function Home() {
     isLoading,
     error,
     apiConfig,
-    modelDescription,
-    clothDescription,
     selectedDefaultPerson,
     selectedDefaultClothing,
     useDefaultClothing,
@@ -31,14 +29,11 @@ export default function Home() {
     DEFAULT_CLOTHING,
 
     // Handlers
-    handleModelDescriptionChange,
-    handleClothDescriptionChange,
     handleSelectDefaultPerson,
     handleSelectDefaultClothing,
     handleUploadPerson,
     handleUploadClothing,
     createSafeObjectUrl,
-    reset,
     handleSubmit,
     handleDownloadImage,
     handleOpenFullView,
@@ -50,6 +45,8 @@ export default function Home() {
     handleMouseMove,
     handleMouseUp,
     handleApiConfigured,
+    // Add useDefaultPerson to the destructuring
+    useDefaultPerson,
   } = useTryOnLogic();
 
   return (
@@ -70,10 +67,8 @@ export default function Home() {
                   defaultPeople={DEFAULT_PEOPLE}
                   selectedDefaultPerson={selectedDefaultPerson}
                   personImage={personImage}
-                  modelDescription={modelDescription}
                   onSelectDefaultPerson={handleSelectDefaultPerson}
                   onUploadPerson={handleUploadPerson}
-                  onModelDescriptionChange={handleModelDescriptionChange}
                   createSafeObjectUrl={createSafeObjectUrl}
                 />
 
@@ -82,10 +77,8 @@ export default function Home() {
                   defaultClothing={DEFAULT_CLOTHING}
                   selectedDefaultClothing={selectedDefaultClothing}
                   clothingImage={clothingImage}
-                  clothDescription={clothDescription}
                   onSelectDefaultClothing={handleSelectDefaultClothing}
                   onUploadClothing={handleUploadClothing}
-                  onClothDescriptionChange={handleClothDescriptionChange}
                   createSafeObjectUrl={createSafeObjectUrl}
                 />
               </div>
@@ -97,10 +90,13 @@ export default function Home() {
                   resultImage={resultImage}
                   error={error}
                   onSubmit={handleSubmit}
-                  onReset={reset}
                   onDownloadImage={handleDownloadImage}
                   onOpenFullView={handleOpenFullView}
-                  isButtonDisabled={isLoading || (!clothingImage && !useDefaultClothing)}
+                  isButtonDisabled={
+                    isLoading ||
+                    (!clothingImage && !useDefaultClothing) ||
+                    (!personImage && !useDefaultPerson)
+                  }
                 />
               </div>
             </div>
