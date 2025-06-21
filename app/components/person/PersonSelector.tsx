@@ -34,7 +34,7 @@ export default function PersonSelector({
                     {defaultPeople.map((person, index) => (
                         <div
                             key={person.id}
-                            className={`relative border-2 rounded cursor-pointer ${selectedDefaultPerson === person.path ? 'border-blue-500' : 'border-transparent'}`}
+                            className={`relative border-2  cursor-pointer ${selectedDefaultPerson === person.path ? 'border-blue-500' : 'border-transparent'}`}
                             onClick={() => onSelectDefaultPerson(person.path, index)}
                         >
                             <Image
@@ -42,9 +42,8 @@ export default function PersonSelector({
                                 alt={person.label}
                                 width={100}
                                 height={150}
-                                className="w-full h-40 object-cover rounded"
+                                className="w-full h-45 object-contain "
                             />
-                            <p className="text-xs text-center mt-1">{person.label}</p>
                         </div>
                     ))}
                 </div>

@@ -13,13 +13,10 @@ const DEFAULT_PEOPLE = [
 
 const DEFAULT_CLOTHING = [
     { id: 'clothing1', path: '/clothing/item1.jpg', label: 'Clothing 1', description: 'Black NASA logo t-shirt' },
-    { id: 'clothing2', path: '/clothing/item2.jpg', label: 'Clothing 2', description: 'Orange/Yellowish cotton sweater' },
     { id: 'clothing3', path: '/clothing/item3.jpg', label: 'Clothing 3', description: 'Red Christmas sweater' },
     { id: 'clothing4', path: '/clothing/item4.jpg', label: 'Clothing 4', description: 'Green long dress' },
-    { id: 'clothing5', path: '/clothing/item5.jpg', label: 'Clothing 5', description: 'Floral black, pink, and red dress' },
     { id: 'clothing6', path: '/clothing/item6.jpg', label: 'Clothing 6', description: '3-piece suit, grey and black' },
     { id: 'clothing7', path: '/clothing/item7.jpg', label: 'Clothing 7', description: 'Blue and green striped skirt' },
-    { id: 'clothing8', path: '/clothing/item8.jpg', label: 'Clothing 8', description: 'Black leather skirt' },
     { id: 'clothing9', path: '/clothing/item9.jpg', label: 'Clothing 9', description: 'Cargo shorts' },
 ];
 

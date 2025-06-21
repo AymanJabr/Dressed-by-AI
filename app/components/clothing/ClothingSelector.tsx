@@ -42,9 +42,8 @@ export default function ClothingSelector({
                                 alt={item.label}
                                 width={100}
                                 height={150}
-                                className="w-full h-40 object-cover rounded"
+                                className="w-full h-45 object-cover rounded"
                             />
-                            <p className="text-xs text-center mt-1">{item.label}</p>
                         </div>
                     ))}
                 </div>

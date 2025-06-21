@@ -61,29 +61,27 @@ export default function Home() {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              <div className="space-y-6">
-                {/* Person Selection */}
-                <PersonSelector
-                  defaultPeople={DEFAULT_PEOPLE}
-                  selectedDefaultPerson={selectedDefaultPerson}
-                  personImage={personImage}
-                  onSelectDefaultPerson={handleSelectDefaultPerson}
-                  onUploadPerson={handleUploadPerson}
-                  createSafeObjectUrl={createSafeObjectUrl}
-                />
+              {/* Person Selection */}
+              <PersonSelector
+                defaultPeople={DEFAULT_PEOPLE}
+                selectedDefaultPerson={selectedDefaultPerson}
+                personImage={personImage}
+                onSelectDefaultPerson={handleSelectDefaultPerson}
+                onUploadPerson={handleUploadPerson}
+                createSafeObjectUrl={createSafeObjectUrl}
+              />
 
-                {/* Clothing Selection */}
-                <ClothingSelector
-                  defaultClothing={DEFAULT_CLOTHING}
-                  selectedDefaultClothing={selectedDefaultClothing}
-                  clothingImage={clothingImage}
-                  onSelectDefaultClothing={handleSelectDefaultClothing}
-                  onUploadClothing={handleUploadClothing}
-                  createSafeObjectUrl={createSafeObjectUrl}
-                />
-              </div>
+              {/* Clothing Selection */}
+              <ClothingSelector
+                defaultClothing={DEFAULT_CLOTHING}
+                selectedDefaultClothing={selectedDefaultClothing}
+                clothingImage={clothingImage}
+                onSelectDefaultClothing={handleSelectDefaultClothing}
+                onUploadClothing={handleUploadClothing}
+                createSafeObjectUrl={createSafeObjectUrl}
+              />
 
-              <div className="space-y-6">
+              <div className="md:col-span-2">
                 {/* Result Preview */}
                 <ResultPreview
                   isLoading={isLoading}
