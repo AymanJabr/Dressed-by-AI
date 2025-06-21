@@ -6,7 +6,7 @@ import PersonSelector from './components/person/PersonSelector';
 import ClothingSelector from './components/clothing/ClothingSelector';
 import ResultPreview from './components/result/ResultPreview';
 import FullViewModal from './components/modal/FullViewModal';
-import useTryOnLogic from './hooks/useTryOnLogic';
+import useTryOnLogic from './hooks/useGenerationLogic';
 
 export default function Home() {
   const {

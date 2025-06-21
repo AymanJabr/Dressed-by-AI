@@ -20,11 +20,18 @@ const DEFAULT_CLOTHING = [
     { id: 'clothing9', path: '/clothing/item9.jpg', label: 'Clothing 9', description: 'Cargo shorts' },
 ];
 
-export default function useTryOnLogic() {
+interface JobResult {
+    status: 'completed' | 'failed' | 'pending';
+    imageUrl?: string;
+    error?: string;
+}
+
+export default function useGenerationLogic() {
     const [personImage, setPersonImage] = useState<File | null>(null);
     const [clothingImage, setClothingImage] = useState<File | null>(null);
     const [resultImage, setResultImage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [loadingStatus, setLoadingStatus] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [apiConfig, setApiConfig] = useState<ApiKeyConfigType | null>(null);
 
@@ -129,14 +136,46 @@ export default function useTryOnLogic() {
         }
     };
 
-    const handleSubmit = async () => {
-        if (!useDefaultClothing && !clothingImage) {
-            setError('Please select or upload a clothing item image');
-            return;
-        }
+    const pollJobStatus = async (jobId: string, timeout = 180000, interval = 3000) => {
+        const startTime = Date.now();
 
-        if (!useDefaultPerson && !personImage) {
-            setError('Please select or upload a person image');
+        return new Promise((resolve, reject) => {
+            const intervalId = setInterval(async () => {
+                if (Date.now() - startTime > timeout) {
+                    clearInterval(intervalId);
+                    reject(new Error("Image generation timed out. Please try again."));
+                    return;
+                }
+
+                try {
+                    setLoadingStatus('Checking job status...');
+                    const response = await fetch(`/api/status/${jobId}`);
+                    const data = await response.json();
+
+                    if (data.status === 'completed') {
+                        setLoadingStatus('Almost there! Your image is ready.');
+                        clearInterval(intervalId);
+                        resolve(data);
+                    } else if (data.status === 'failed') {
+                        clearInterval(intervalId);
+                        reject(new Error(data.error || 'Image generation failed.'));
+                    } else if (data.status === 'pending') {
+                        setLoadingStatus('Job is queued...');
+                    } else {
+                        setLoadingStatus('Processing image...');
+                    }
+                } catch (err) {
+                    clearInterval(intervalId);
+                    const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+                    reject(new Error(`Failed to check job status: ${errorMessage}`));
+                }
+            }, interval);
+        });
+    };
+
+    const handleSubmit = async () => {
+        if ((!useDefaultClothing && !clothingImage) || (!useDefaultPerson && !personImage)) {
+            setError('Please select or upload both a clothing item and a person image.');
             return;
         }
 
@@ -147,11 +186,12 @@ export default function useTryOnLogic() {
 
         setIsLoading(true);
         setError(null);
+        setResultImage(null);
+        setLoadingStatus('Preparing your images...');
 
         try {
             const formData = new FormData();
 
-            // Handle person image (default or uploaded) - now required
             if (useDefaultPerson && selectedDefaultPerson) {
                 const personFile = await fetchImageAsFile(selectedDefaultPerson, 'default-person.jpg');
                 formData.append('personImage', personFile);
@@ -159,7 +199,6 @@ export default function useTryOnLogic() {
                 formData.append('personImage', personImage);
             }
 
-            // Handle clothing image (default or uploaded) - required
             if (useDefaultClothing && selectedDefaultClothing) {
                 const clothingFile = await fetchImageAsFile(selectedDefaultClothing, 'default-clothing.jpg');
                 formData.append('clothingImage', clothingFile);
@@ -169,81 +208,64 @@ export default function useTryOnLogic() {
 
             formData.append('apiKey', apiConfig.apiKey);
 
-            console.log('🔄 Sending request to API endpoint');
-            const startTime = Date.now();
-
+            setLoadingStatus('Uploading and starting generation...');
             const response = await fetch('/api/generate', {
                 method: 'POST',
-                body: formData
+                body: formData,
             });
 
-            const requestDuration = Date.now() - startTime;
-            console.log(`✅ Received API response in ${requestDuration}ms`);
-            console.log(`Response status: ${response.status}`);
-
             if (!response.ok) {
-                const data = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
-                throw new Error(data.error || `Request failed with status ${response.status}`);
+                const data = await response.json().catch(() => ({ error: 'Failed to start generation job.' }));
+                throw new Error(data.error || 'Could not start the generation process.');
             }
 
-            console.log('🔄 Processing API response data');
-            const parseStartTime = Date.now();
+            const { jobId } = await response.json();
 
-            const data = await response.json();
-
-            const parseEndTime = Date.now();
-            console.log(`✅ Parsed JSON response in ${parseEndTime - parseStartTime}ms`);
-
-            if (!data.imageUrl) {
-                throw new Error('Response did not contain an image URL');
+            if (!jobId) {
+                throw new Error('Did not receive a job ID from the server.');
             }
 
-            // Log the size of the received data
-            if (data.imageUrl) {
-                const imageSize = data.imageUrl.length;
-                console.log(`📊 Received image URL of size: ${(imageSize / 1024 / 1024).toFixed(2)} MB`);
+            setLoadingStatus('Generation started! Waiting for the result...');
+            const result = await pollJobStatus(jobId) as JobResult;
+
+            if (result.imageUrl) {
+                const blobUrl = await convertBase64ToBlobUrl(result.imageUrl);
+                setResultImage(blobUrl);
+            } else {
+                throw new Error('The final result did not contain an image URL.');
             }
 
-            // Try to optimize the image storage by converting to a Blob URL instead of keeping the base64
-            try {
-                console.log('🔄 Converting base64 to Blob URL to save memory');
-                const optimizeStartTime = Date.now();
-
-                if (data.imageUrl && data.imageUrl.startsWith('data:')) {
-                    const base64Response = await fetch(data.imageUrl);
-                    const blob = await base64Response.blob();
-
-                    // Revoke any previous object URL to prevent memory leaks
-                    if (resultImage && resultImage.startsWith('blob:')) {
-                        URL.revokeObjectURL(resultImage);
-                    }
-
-                    // Create a blob URL which is more memory efficient
-                    const blobUrl = URL.createObjectURL(blob);
-                    objectUrlsRef.current.push(blobUrl);
-
-                    const optimizeEndTime = Date.now();
-                    console.log(`✅ Converted to Blob URL in ${optimizeEndTime - optimizeStartTime}ms`);
-                    console.log(`Blob size: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
-
-                    // Set the blob URL instead of the base64 string
-                    setResultImage(blobUrl);
-                } else {
-                    // Fall back to using the original imageUrl if it's not a data URL
-                    setResultImage(data.imageUrl);
-                }
-            } catch (optimizeError) {
-                console.error('Error optimizing image:', optimizeError);
-                // Fall back to using the original imageUrl
-                setResultImage(data.imageUrl);
-            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to generate image');
             console.error(err);
         } finally {
             setIsLoading(false);
+            setLoadingStatus('');
         }
     };
+
+    const convertBase64ToBlobUrl = async (base64String: string): Promise<string> => {
+        try {
+            if (base64String && base64String.startsWith('data:')) {
+                const base64Response = await fetch(base64String);
+                const blob = await base64Response.blob();
+
+                // Revoke any previous object URL to prevent memory leaks
+                if (resultImage && resultImage.startsWith('blob:')) {
+                    URL.revokeObjectURL(resultImage);
+                }
+
+                const blobUrl = URL.createObjectURL(blob);
+                objectUrlsRef.current.push(blobUrl);
+                return blobUrl;
+            }
+            return base64String;
+        } catch (error) {
+            console.error('Error converting base64 to Blob URL:', error);
+            return base64String; // Fallback to the original string
+        }
+    };
+
 
     const handleDownloadImage = () => {
         if (resultImage) {
@@ -311,6 +333,7 @@ export default function useTryOnLogic() {
         clothingImage,
         resultImage,
         isLoading,
+        loadingStatus,
         error,
         apiConfig,
         selectedDefaultPerson,
