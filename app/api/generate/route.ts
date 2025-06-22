@@ -1,7 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getStore } from '@netlify/blobs'; // This can be removed if you only use Vercel Blob storage
-
-export const maxDuration = 60; // Set the timeout to 60 seconds
 
 // Helper function to format bytes for logging
 function formatBytes(bytes: number, decimals = 2) {
