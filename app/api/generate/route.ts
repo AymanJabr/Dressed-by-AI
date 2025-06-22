@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server';
-import { getStore } from '@netlify/blobs';
-import { randomUUID } from 'crypto';
+import { getStore } from '@netlify/blobs'; // This can be removed if you only use Vercel Blob storage
 
-export const maxDuration = 45; // Keep a slightly longer duration for safety, though it should be fast.
+export const maxDuration = 60; // Set the timeout to 60 seconds
+
+// Helper function to format bytes for logging
+function formatBytes(bytes: number, decimals = 2) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
 
 export async function POST(request: Request) {
     try {
@@ -18,37 +28,52 @@ export async function POST(request: Request) {
         const clothingBase64 = Buffer.from(await clothingImageFile.arrayBuffer()).toString('base64');
         const personBase64 = Buffer.from(await personImageFile.arrayBuffer()).toString('base64');
 
-        const jobId = randomUUID();
-        const store = getStore('results');
+        console.log(`📊 Received base64 data sizes:`);
+        console.log(`  Clothing base64: ${formatBytes(clothingBase64.length)}`);
+        console.log(`  Person base64: ${formatBytes(personBase64.length)}`);
 
-        // Set an initial "pending" status
-        await store.setJSON(jobId, { status: 'pending', jobId });
+        const segmindRequestBody = {
+            outfit_image: clothingBase64,
+            model_image: personBase64,
+            model_type: "Balanced",
+            base64: true
+        };
 
-        // Get the base URL to construct the background function URL
-        const url = new URL(request.url);
-        const backgroundFunctionUrl = `${url.origin}/api/generate-background`;
+        const url = "https://api.segmind.com/v1/segfit-v1.2";
+        console.log(`🔄 Sending request to Segmind API...`);
 
-        // Trigger the background function without awaiting the response
-        fetch(backgroundFunctionUrl, {
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'x-api-key': apiKey,
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                personImage: personBase64,
-                clothingImage: clothingBase64,
-                apiKey,
-                jobId,
-            }),
+            body: JSON.stringify(segmindRequestBody),
         });
 
-        // Immediately return the jobId to the client
-        return NextResponse.json({ jobId });
+        console.log(`✅ Received response from Segmind API`);
+        console.log(`  Response status: ${response.status}`);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Segmind API error: ${response.status} ${errorText}`);
+            return NextResponse.json({ error: `Segmind API Error: ${response.status}`, message: errorText }, { status: 500 });
+        }
+
+        const jsonResponse = await response.json();
+        const base64Data = jsonResponse.base64 || jsonResponse.image;
+        const imageUrl = base64Data.startsWith('data:')
+            ? base64Data
+            : `data:image/png;base64,${base64Data}`;
+
+        console.log(`✅ Successfully processed image.`);
+        // Immediately return the final image URL to the client
+        return NextResponse.json({ imageUrl });
 
     } catch (error) {
-        console.error('Error starting image generation job:', error);
+        console.error('Error during image generation:', error);
         return NextResponse.json(
-            { error: 'Failed to start image generation job.' },
+            { error: 'Failed to generate image due to an internal error.' },
             { status: 500 }
         );
     }

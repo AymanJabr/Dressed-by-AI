@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "dev:netlify": "netlify dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

@@ -21,7 +21,6 @@ const DEFAULT_CLOTHING = [
 ];
 
 interface JobResult {
-    status: 'completed' | 'failed' | 'pending';
     imageUrl?: string;
     error?: string;
 }
@@ -31,7 +30,6 @@ export default function useGenerationLogic() {
     const [clothingImage, setClothingImage] = useState<File | null>(null);
     const [resultImage, setResultImage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [loadingStatus, setLoadingStatus] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [apiConfig, setApiConfig] = useState<ApiKeyConfigType | null>(null);
 
@@ -136,43 +134,6 @@ export default function useGenerationLogic() {
         }
     };
 
-    const pollJobStatus = async (jobId: string, timeout = 180000, interval = 3000) => {
-        const startTime = Date.now();
-
-        return new Promise((resolve, reject) => {
-            const intervalId = setInterval(async () => {
-                if (Date.now() - startTime > timeout) {
-                    clearInterval(intervalId);
-                    reject(new Error("Image generation timed out. Please try again."));
-                    return;
-                }
-
-                try {
-                    setLoadingStatus('Checking job status...');
-                    const response = await fetch(`/api/status/${jobId}`);
-                    const data = await response.json();
-
-                    if (data.status === 'completed') {
-                        setLoadingStatus('Almost there! Your image is ready.');
-                        clearInterval(intervalId);
-                        resolve(data);
-                    } else if (data.status === 'failed') {
-                        clearInterval(intervalId);
-                        reject(new Error(data.error || 'Image generation failed.'));
-                    } else if (data.status === 'pending') {
-                        setLoadingStatus('Job is queued...');
-                    } else {
-                        setLoadingStatus('Processing image...');
-                    }
-                } catch (err) {
-                    clearInterval(intervalId);
-                    const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-                    reject(new Error(`Failed to check job status: ${errorMessage}`));
-                }
-            }, interval);
-        });
-    };
-
     const handleSubmit = async () => {
         if ((!useDefaultClothing && !clothingImage) || (!useDefaultPerson && !personImage)) {
             setError('Please select or upload both a clothing item and a person image.');
@@ -187,7 +148,6 @@ export default function useGenerationLogic() {
         setIsLoading(true);
         setError(null);
         setResultImage(null);
-        setLoadingStatus('Preparing your images...');
 
         try {
             const formData = new FormData();
@@ -208,31 +168,23 @@ export default function useGenerationLogic() {
 
             formData.append('apiKey', apiConfig.apiKey);
 
-            setLoadingStatus('Uploading and starting generation...');
             const response = await fetch('/api/generate', {
                 method: 'POST',
                 body: formData,
             });
 
             if (!response.ok) {
-                const data = await response.json().catch(() => ({ error: 'Failed to start generation job.' }));
+                const data = await response.json().catch(() => ({ error: 'Image generation failed.' }));
                 throw new Error(data.error || 'Could not start the generation process.');
             }
 
-            const { jobId } = await response.json();
-
-            if (!jobId) {
-                throw new Error('Did not receive a job ID from the server.');
-            }
-
-            setLoadingStatus('Generation started! Waiting for the result...');
-            const result = await pollJobStatus(jobId) as JobResult;
+            const result = await response.json() as JobResult;
 
             if (result.imageUrl) {
                 const blobUrl = await convertBase64ToBlobUrl(result.imageUrl);
                 setResultImage(blobUrl);
             } else {
-                throw new Error('The final result did not contain an image URL.');
+                throw new Error(result.error || 'The final result did not contain an image URL.');
             }
 
         } catch (err) {
@@ -240,7 +192,6 @@ export default function useGenerationLogic() {
             console.error(err);
         } finally {
             setIsLoading(false);
-            setLoadingStatus('');
         }
     };
 
@@ -265,7 +216,6 @@ export default function useGenerationLogic() {
             return base64String; // Fallback to the original string
         }
     };
-
 
     const handleDownloadImage = () => {
         if (resultImage) {
@@ -333,7 +283,6 @@ export default function useGenerationLogic() {
         clothingImage,
         resultImage,
         isLoading,
-        loadingStatus,
         error,
         apiConfig,
         selectedDefaultPerson,
