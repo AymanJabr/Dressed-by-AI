@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { post } from 'aws-amplify/api';
 import { ApiKeyConfig as ApiKeyConfigType } from '../types';
 
 // Default models with descriptions
@@ -168,17 +169,33 @@ export default function useGenerationLogic() {
 
             formData.append('apiKey', apiConfig.apiKey);
 
-            const response = await fetch('/api/generate', {
-                method: 'POST',
-                body: formData,
+            // Use the Amplify API post helper instead of fetch
+            const restOperation = post({
+                apiName: 'generate', // The name we gave the function in amplify/backend.ts
+                path: '/', // The root path of the 'generate' API
+                options: {
+                    body: formData,
+                },
             });
 
-            if (!response.ok) {
-                const data = await response.json().catch(() => ({ error: 'Image generation failed.' }));
-                throw new Error(data.error || 'Could not start the generation process.');
+            const response = await restOperation.response;
+
+            if (response.statusCode >= 400) {
+                const errorPayload = { error: `Request failed with status ${response.statusCode}` };
+                try {
+                    // Try to parse the error response, but have a fallback.
+                    const parsedError = await response.body.json();
+                    if (typeof parsedError === 'object' && parsedError !== null && 'error' in parsedError && typeof parsedError.error === 'string') {
+                        errorPayload.error = parsedError.error;
+                    }
+                } catch (e) {
+                    // Ignore if body is not valid JSON or fails to parse
+                    console.error("Invalid JSON response: ", e);
+                }
+                throw new Error(errorPayload.error);
             }
 
-            const result = await response.json() as JobResult;
+            const result = await response.body.json() as JobResult;
 
             if (result.imageUrl) {
                 const blobUrl = await convertBase64ToBlobUrl(result.imageUrl);

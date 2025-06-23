@@ -10,14 +10,18 @@
   },
   "dependencies": {
     "@netlify/blobs": "^10.0.1",
+    "aws-amplify": "^6.15.1",
+    "lambda-multipart-parser": "^1.0.1",
     "lucide-react": "^0.488.0",
     "next": "15.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@aws-amplify/backend": "^1.16.1",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/aws-lambda": "^8.10.150",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
