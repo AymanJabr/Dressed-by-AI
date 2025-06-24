@@ -171,7 +171,7 @@ export default function useGenerationLogic() {
 
             // Use the Amplify API post helper instead of fetch
             const restOperation = post({
-                apiName: 'generate', // The name we gave the function in amplify/backend.ts
+                apiName: 'generate-image', // The name we gave the function in amplify/backend.ts
                 path: '/', // The root path of the 'generate' API
                 options: {
                     body: formData,

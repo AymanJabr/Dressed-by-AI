@@ -6,7 +6,7 @@ import PersonSelector from './components/person/PersonSelector';
 import ClothingSelector from './components/clothing/ClothingSelector';
 import ResultPreview from './components/result/ResultPreview';
 import FullViewModal from './components/modal/FullViewModal';
-import useTryOnLogic from './hooks/useGenerationLogic';
+import useGenerationLogic from './hooks/useGenerationLogic';
 
 export default function Home() {
   const {
@@ -47,7 +47,7 @@ export default function Home() {
     handleApiConfigured,
     // Add useDefaultPerson to the destructuring
     useDefaultPerson,
-  } = useTryOnLogic();
+  } = useGenerationLogic();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
