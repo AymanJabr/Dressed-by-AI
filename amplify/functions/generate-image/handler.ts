@@ -1,16 +1,6 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import multipart, { MultipartFile } from 'lambda-multipart-parser';
 
-// Helper to create a standard JSON response
-const createResponse = (statusCode: number, body: Record<string, any>): APIGatewayProxyResult => ({
-    statusCode,
-    headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', // Allow requests from any origin
-        'Access-Control-Allow-Headers': '*',
-    },
-    body: JSON.stringify(body),
-});
+import type { Schema } from '../../data/resource';
+
 
 // Helper function to format bytes for logging
 function formatBytes(bytes: number, decimals = 2) {
@@ -22,38 +12,25 @@ function formatBytes(bytes: number, decimals = 2) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    if (event.httpMethod === 'OPTIONS') {
-        // Handle CORS preflight requests
-        return createResponse(200, {});
-    }
+
+export const handler: Schema['generateImage']['functionHandler'] = async (event) => {
 
     try {
-        if (!event.body) {
-            return createResponse(400, { error: 'Missing request body' });
-        }
 
-        // The body from API Gateway will be base64 encoded if it's multipart
-        const parsed = await multipart.parse(event);
+        // The arguments are now destructured from `event.arguments`.
+        const { personImage, clothingImage, apiKey } = event.arguments;
 
-        const personImageFile = parsed.files.find((f: MultipartFile) => f.fieldname === 'personImage');
-        const clothingImageFile = parsed.files.find((f: MultipartFile) => f.fieldname === 'clothingImage');
-        const apiKey = parsed.apiKey;
-
-        if (!clothingImageFile || !personImageFile || !apiKey) {
-            return createResponse(400, { error: 'Missing required fields' });
-        }
-
-        const clothingBase64 = clothingImageFile.content.toString('base64');
-        const personBase64 = personImageFile.content.toString('base64');
+        // The base64 strings are now directly available from the event arguments.
+        const clothingBase64 = clothingImage;
+        const personBase64 = personImage;
 
         console.log(`📊 Received base64 data sizes:`);
         console.log(`  Clothing base64: ${formatBytes(clothingBase64.length)}`);
         console.log(`  Person base64: ${formatBytes(personBase64.length)}`);
 
         const segmindRequestBody = {
-            outfit_image: clothingBase64,
-            model_image: personBase64,
+            outfit_image: clothingImage,
+            model_image: personImage,
             model_type: "Balanced",
             base64: true
         };
@@ -76,7 +53,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`Segmind API error: ${response.status} ${errorText}`);
-            return createResponse(500, { error: `Segmind API Error: ${response.status}`, message: errorText });
+            throw new Error(`Segmind API Error: ${response.status} - ${errorText}`);
         }
 
         const jsonResponse = await response.json();
@@ -86,10 +63,16 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             : `data:image/png;base64,${base64Data}`;
 
         console.log(`✅ Successfully processed image.`);
-        return createResponse(200, { imageUrl });
+        return { imageUrl };
 
     } catch (error) {
         console.error('Error during image generation:', error);
-        return createResponse(500, { error: 'Failed to generate image due to an internal error.' });
+        // return createResponse(500, { error: 'Failed to generate image due to an internal error.' });
+        if (error instanceof Error) {
+            throw new Error(
+                `Failed to generate image due to an internal error: ${error.message}`
+            );
+        }
+        throw new Error('Failed to generate image due to an unknown internal error.');
     }
 }; 

@@ -1,6 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { post } from 'aws-amplify/api';
+
+// These are the new imports required to use the Amplify Gen 2 GraphQL client.
+import { Amplify } from 'aws-amplify';
+import { generateClient } from 'aws-amplify/api';
+import type { Schema } from '@/amplify/data/resource';
+import outputs from '@/amplify_outputs.json';
+
 import { ApiKeyConfig as ApiKeyConfigType } from '../types';
+
+// This configures the Amplify library to connect to your backend resources.
+Amplify.configure(outputs);
+
+// This creates a type-safe client for your GraphQL API.
+const client = generateClient<Schema>();
 
 // Default models with descriptions
 const DEFAULT_PEOPLE = [
@@ -135,6 +147,18 @@ export default function useGenerationLogic() {
         }
     };
 
+    const fileToBase64 = (file: File): Promise<string> =>
+        new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                const result = reader.result as string;
+                // Remove the data URL prefix (e.g., "data:image/png;base64,")
+                resolve(result.split(',')[1]);
+            };
+            reader.onerror = (error) => reject(error);
+        });
+
     const handleSubmit = async () => {
         if ((!useDefaultClothing && !clothingImage) || (!useDefaultPerson && !personImage)) {
             setError('Please select or upload both a clothing item and a person image.');
@@ -151,51 +175,44 @@ export default function useGenerationLogic() {
         setResultImage(null);
 
         try {
-            const formData = new FormData();
+            // The logic to prepare FormData is no longer needed.
+            // We get the image files and convert them to Base64 strings.
+            let personImageB64: string;
+            let clothingImageB64: string;
 
             if (useDefaultPerson && selectedDefaultPerson) {
                 const personFile = await fetchImageAsFile(selectedDefaultPerson, 'default-person.jpg');
-                formData.append('personImage', personFile);
+                personImageB64 = await fileToBase64(personFile);
             } else if (personImage) {
-                formData.append('personImage', personImage);
+                personImageB64 = await fileToBase64(personImage);
+            } else {
+                throw new Error("Person image is not selected.");
             }
 
             if (useDefaultClothing && selectedDefaultClothing) {
                 const clothingFile = await fetchImageAsFile(selectedDefaultClothing, 'default-clothing.jpg');
-                formData.append('clothingImage', clothingFile);
+                clothingImageB64 = await fileToBase64(clothingFile);
             } else if (clothingImage) {
-                formData.append('clothingImage', clothingImage);
+                clothingImageB64 = await fileToBase64(clothingImage);
+            } else {
+                throw new Error("Clothing image is not selected.");
             }
 
-            formData.append('apiKey', apiConfig.apiKey);
-
-            // Use the Amplify API post helper instead of fetch
-            const restOperation = post({
-                apiName: 'generate-image', // The name we gave the function in amplify/backend.ts
-                path: '/', // The root path of the 'generate' API
-                options: {
-                    body: formData,
-                },
+            // This is the new API call using the generated GraphQL client.
+            // It calls the `generateImage` query we defined in `amplify/data/resource.ts`.
+            const { data, errors } = await client.queries.generateImage({
+                personImage: personImageB64,
+                clothingImage: clothingImageB64,
+                apiKey: apiConfig.apiKey,
             });
 
-            const response = await restOperation.response;
-
-            if (response.statusCode >= 400) {
-                const errorPayload = { error: `Request failed with status ${response.statusCode}` };
-                try {
-                    // Try to parse the error response, but have a fallback.
-                    const parsedError = await response.body.json();
-                    if (typeof parsedError === 'object' && parsedError !== null && 'error' in parsedError && typeof parsedError.error === 'string') {
-                        errorPayload.error = parsedError.error;
-                    }
-                } catch (e) {
-                    // Ignore if body is not valid JSON or fails to parse
-                    console.error("Invalid JSON response: ", e);
-                }
-                throw new Error(errorPayload.error);
+            // The new client returns an 'errors' array if something goes wrong.
+            if (errors) {
+                throw new Error(errors[0].message || 'An unknown error occurred during image generation.');
             }
 
-            const result = await response.body.json() as JobResult;
+            // The result is now directly in `data`, not in a response body.
+            const result = data as JobResult;
 
             if (result.imageUrl) {
                 const blobUrl = await convertBase64ToBlobUrl(result.imageUrl);
