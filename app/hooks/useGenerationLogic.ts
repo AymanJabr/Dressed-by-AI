@@ -1,15 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 
-// These are the new imports required to use the Amplify Gen 2 GraphQL client.
-import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/api';
 import type { Schema } from '@/amplify/data/resource';
-import outputs from '@/amplify_outputs.json';
 
 import { ApiKeyConfig as ApiKeyConfigType } from '../types';
 
-// This configures the Amplify library to connect to your backend resources.
-Amplify.configure(outputs);
 
 // This creates a type-safe client for your GraphQL API.
 const client = generateClient<Schema>();
