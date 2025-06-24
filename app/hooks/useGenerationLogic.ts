@@ -6,9 +6,6 @@ import type { Schema } from '@/amplify/data/resource';
 import { ApiKeyConfig as ApiKeyConfigType } from '../types';
 
 
-// This creates a type-safe client for your GraphQL API.
-const client = generateClient<Schema>();
-
 // Default models with descriptions
 const DEFAULT_PEOPLE = [
     { id: 'person1', path: '/people/person1.jpg', label: 'Person 1', description: 'Young woman with brown hair, hands on hips' },
@@ -34,6 +31,7 @@ interface JobResult {
 }
 
 export default function useGenerationLogic() {
+    const client = generateClient<Schema>();
     const [personImage, setPersonImage] = useState<File | null>(null);
     const [clothingImage, setClothingImage] = useState<File | null>(null);
     const [resultImage, setResultImage] = useState<string | null>(null);
