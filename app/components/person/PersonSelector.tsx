@@ -43,7 +43,6 @@ export default function PersonSelector({
                                 width={100}
                                 height={150}
                                 className="w-full h-45 object-contain "
-                                sizes="33vw"
                             />
                         </div>
                     ))}

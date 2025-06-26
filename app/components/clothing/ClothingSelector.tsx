@@ -43,7 +43,6 @@ export default function ClothingSelector({
                                 width={100}
                                 height={150}
                                 className="w-full h-45 object-cover rounded"
-                                sizes="33vw"
                             />
                         </div>
                     ))}
